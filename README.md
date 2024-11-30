@@ -21,10 +21,10 @@ Installation
    pip install requests pystyle
 
 Usage  
-1. Run the tool:  
-   python HookTool.py  
-2. Enter the webhook URL when prompted.  
-3. Choose an action from the menu:  
+1. Run the Install & Run.bat
+2. #This pip installs everything and automatically goes to the webhook tool. 
+3. Enter the webhook URL when prompted.  
+4. Choose an action from the menu:  
    - [1] Spam: Send messages repeatedly.  
    - [2] Delete: Remove the webhook.  
    - [3] Change Name: Change the webhook name.  
