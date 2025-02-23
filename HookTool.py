@@ -1,83 +1,148 @@
-import time as T, os as O, logging as L, requests as R, random as E, pystyle as P
+import time
+import os
+import logging
+import requests
+import random
+import pystyle
 import base64
 
-def IXIXIXTHWISHGEWHCLEARANDPRINTTHETERMINALSCREENFORWEBSERVICEINTERACTIONPURPOSES(): 
-    O.system('cls' if O.name=='nt' else 'clear')
+# Löscht den Terminalbildschirm
+def clear_terminal():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-def XXYYYZZZZGETWEBSERVICEWITHGIVENURLANDRETURNJSONIFSTATUSOKANDVALIDATESIFNOTNONE(W): 
-    return R.get(W).json() if R.get(W).status_code==200 else None
+# Holt JSON-Daten von der Webhook-URL, falls der Status 200 ist
+def get_webhook_json(url):
+    response = requests.get(url)
+    return response.json() if response.status_code == 200 else None
 
-def ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES(P): 
-    return str(input(f"{P} > "))
+# Fragt den Benutzer nach einer Eingabe und gibt diese zurück
+def prompt_user(message):
+    return input(f"{message} > ")
 
-def QQWWEEPRINTMENUOPTIONSWITHRAINBOWCOLORANDNUMBERINGFORUSERSELECTION(): 
+# Zeigt das Menü mit farbigem (Regenbogen-) Text an
+def print_menu():
     options = ["Spam", "Delete", "Change Name", "One Message", "Check Status", "Exit"]
-    for i, o in enumerate(options, 1):
-        P.Write.Print(f"\n[{i}] {o}", P.Colors.rainbow)  
+    for i, option in enumerate(options, 1):
+        pystyle.Write.Print(f"\n[{i}] {option}", pystyle.Colors.rainbow)
 
-def XXYYWWSPAMWEBSERVICEWITHMESSAGEWITHTIMEDELAYANDLOGGINGOFRESULTS(W, M): 
-    while True: 
-        RR = R.post(W, json={'content': M}, headers={'Content-Type': 'application/json'})
-        if RR.status_code == 204: XXYYWWSUCCESSMESSAGE(); T.sleep(E.uniform(0.5, 1.5))
+# Function to send messages to the webhook
+def spam_webhook(url, content):
+    while True:
+        try:
+            # Send the message to the webhook
+            response = requests.post(url, json={'content': content}, headers={'Content-Type': 'application/json'})
+            
+            if response.status_code == 204:
+                # Successfully sent message in rainbow colors
+                print(f"Successfully sent spam")
+            elif response.status_code == 429:  # Rate limit reached
+                reset_time = int(response.headers.get('X-RateLimit-Reset', 1))  # Time until reset in seconds
+                pystyle.Write.Print(f"Rate limit reached. Waiting for {reset_time} seconds.", pystyle.Colors.rainbow)
+                time.sleep(reset_time)  # Wait until the rate limit resets
+            else:
+                pystyle.Write.Print(f"Error whilst trying to send message: {response.status_code}", pystyle.Colors.rainbow)
+        
+        except requests.exceptions.RequestException as e:
+            pystyle.Write.Print(f"An error occurred: {e}", pystyle.Colors.rainbow)
+        
+        # Decrease the wait time between messages
+        time.sleep(random.uniform(0.1, 0.3))  # Wait time between 0.1 and 0.3 seconds
+        
+# Löscht den Webhook
+def delete_webhook(url):
+    response = requests.delete(url)
+    if response.status_code == 204:
+        print_delete_success()
 
-def YYXXWWDELETEWEBSERVICEWITHGIVENURLANDLOGRESULTSOFDELETIONPROCESS(W): 
-    if R.delete(W).status_code == 204: YYXXWWSUCCESSMESSAGE()
+# Ändert den Namen des Webhooks
+def change_webhook_name(url, new_name):
+    response = requests.patch(url, json={"name": new_name}, headers={'Content-Type': 'application/json'})
+    if response.status_code == 200:
+        print_change_name_success()
+    else:
+        logging.error(f"Failed to Change Name. Status Code: {response.status_code}")
 
-def ZZYYXXCHANGEWEBSERVICENAMEWITHNEWNAMEANDLOGRESULTSOFNAMECHANGEPROCESS(W, N): 
-    RR = R.patch(W, json={"name": N}, headers={'Content-Type': 'application/json'})
-    if RR.status_code == 200: ZZYYXXSUCCESSMESSAGE()
-    else: L.error(f"Failed to Change Name. Status Code: {RR.status_code}")
+# Sendet eine einmalige Nachricht an den Webhook
+def send_one_time_message(url, content):
+    response = requests.post(url, json={'content': content}, headers={'Content-Type': 'application/json'})
+    if response.status_code == 204:
+        print_one_time_message_success()
 
-def YYWWZZSENDONETIMEWEBSERVICEMESSAGEANDLOGRESULTS(W, M): 
-    RR = R.post(W, json={'content': M}, headers={'Content-Type': 'application/json'})
-    if RR.status_code == 204: YYWWZZSUCCESSMESSAGE()
+# Überprüft, ob der Webhook aktiv ist
+def check_webhook_status(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        print_status_success()
+    else:
+        if response.status_code == 404:
+            logging.warning("Webhook Not Found.")
+        else:
+            logging.warning(f"Unknown Error Occurred. Status Code: {response.status_code}")
 
-def YYXXZZCHECKWEBSERVICESTATUSWITHGIVENURLANDLOGRESULTSOFWEBSERVICECHECK(W): 
-    RR = R.get(W)
-    if RR.status_code == 200: YYXXZZSUCCESSMESSAGE()
-    else: L.warning("Webhook Not Found." if RR.status_code == 404 else f"Unknown Error Occurred. Status Code: {RR.status_code}")
+# Erfolgsmeldungen
+def print_success_message():
+    pystyle.Write.Print("Successfully sent message.", pystyle.Colors.rainbow)
 
-def XXYYWWSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully sent message.", P.Colors.rainbow)
+def print_delete_success():
+    pystyle.Write.Print("Successfully deleted.", pystyle.Colors.rainbow)
 
-def YYXXWWSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully deleted.", P.Colors.rainbow)
+def print_change_name_success():
+    pystyle.Write.Print("Successfully changed name.", pystyle.Colors.rainbow)
 
-def ZZYYXXSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully changed name.", P.Colors.rainbow)
+def print_one_time_message_success():
+    pystyle.Write.Print("Successfully sent one-time message.", pystyle.Colors.rainbow)
 
-def YYWWZZSUCCESSMESSAGE(): 
-    P.Write.Print("Successfully sent one-time message.", P.Colors.rainbow)
+def print_status_success():
+    pystyle.Write.Print("Webhook is active.", pystyle.Colors.rainbow)
 
-def YYXXZZSUCCESSMESSAGE(): 
-    P.Write.Print("Webhook is active.", P.Colors.rainbow)
+# Druckt die Signatur, die im Code base64-kodiert hinterlegt ist
+def print_signature():
+    # Base64-kodierter String: "Made - by Cxrve"
+    signature = base64.b64decode("TWFkZSAtIGJ5IHRydWVfbG9jaw==").decode('utf-8')
+    pystyle.Write.Print(signature, pystyle.Colors.rainbow)
 
-def OOOOOOOOOOOOOOCLEARSCREENANDINITIALIZEWEBHOOKURLINPUTPROMPTANDLOGRESULTS(): 
-    IXIXIXTHWISHGEWHCLEARANDPRINTTHETERMINALSCREENFORWEBSERVICEINTERACTIONPURPOSES()
-    XXAXXIXXXZXXEXXRRRXXXXXX1FTGUYHKJHKGSFDJTEGBHEDNJAHKGJEFTKGBYRHEDNJ()  
-    W = ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("\nEnter Webhook URL")
-    L.info(f"Webhook URL Entered: {W}")
-    A = XXYYYZZZZGETWEBSERVICEWITHGIVENURLANDRETURNJSONIFSTATUSOKANDVALIDATESIFNOTNONE(W)
-    if A: L.info(f"Webhook Name Retrieved: {A['name']}")
-    while True: 
-        IXIXIXTHWISHGEWHCLEARANDPRINTTHETERMINALSCREENFORWEBSERVICEINTERACTIONPURPOSES()
-        XXAXXIXXXZXXEXXRRRXXXXXX1FTGUYHKJHKGSFDJTEGBHEDNJAHKGJEFTKGBYRHEDNJ()  
-        QQWWEEPRINTMENUOPTIONSWITHRAINBOWCOLORANDNUMBERINGFORUSERSELECTION()
-        X = int(ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("\n>>> "))
-        if X not in range(1, 7): L.error("Invalid Choice Made. Please Try Again."); T.sleep(2); continue
-        if X == 1: XXYYWWSPAMWEBSERVICEWITHMESSAGEWITHTIMEDELAYANDLOGGINGOFRESULTS(W, ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("Content: "))
-        if X == 2: YYXXWWDELETEWEBSERVICEWITHGIVENURLANDLOGRESULTSOFDELETIONPROCESS(W)
-        if X == 3: ZZYYXXCHANGEWEBSERVICENAMEWITHNEWNAMEANDLOGRESULTSOFNAMECHANGEPROCESS(W, ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("Name: "))
-        if X == 4: YYWWZZSENDONETIMEWEBSERVICEMESSAGEANDLOGRESULTS(W, ZZXXYYPROMPTUSERFORINPUTWITHMESSAGEANDRETURNINPUTSTRINGFORINTERACTIONPURPOSES("Content: "))
-        if X == 5: YYXXZZCHECKWEBSERVICESTATUSWITHGIVENURLANDLOGRESULTSOFWEBSERVICECHECK(W)
-        if X == 6: break
-        T.sleep(E.uniform(0.5, 1.5))
+# Initialisiert die Webhook-Interaktion und das Menü
+def initialize_webhook():
+    clear_terminal()
+    print_signature()
+    webhook_url = prompt_user("\nEnter Webhook URL")
+    logging.info(f"Webhook URL Entered: {webhook_url}")
+    webhook_data = get_webhook_json(webhook_url)
+    if webhook_data:
+        logging.info(f"Webhook Name Retrieved: {webhook_data['name']}")
+    while True:
+        clear_terminal()
+        print_signature()
+        print_menu()
+        try:
+            choice = int(prompt_user("\n>>> "))
+        except ValueError:
+            logging.error("Invalid input. Please enter a number.")
+            time.sleep(2)
+            continue
 
-def XXAXXIXXXZXXEXXRRRXXXXXX1FTGUYHKJHKGSFDJTEGBHEDNJAHKGJEFTKGBYRHEDNJ(): 
-    # Base64 encoded message: "Made - by Cxrve"
-    TVYGBHENJFRRTVFRASDGTYBUHKNBGBRFT = base64.b64decode("TWFkZSAtIGJ5IEN4cnZl").decode('utf-8')
-    # Print the decoded message with rainbow colors
-    P.Write.Print(TVYGBHENJFRRTVFRASDGTYBUHKNBGBRFT, P.Colors.rainbow)
+        if choice not in range(1, 7):
+            logging.error("Invalid Choice Made. Please Try Again.")
+            time.sleep(2)
+            continue
 
-if __name__ == "__main__": 
-    OOOOOOOOOOOOOOCLEARSCREENANDINITIALIZEWEBHOOKURLINPUTPROMPTANDLOGRESULTS()
+        if choice == 1:
+            content = prompt_user("Content")
+            spam_webhook(webhook_url, content)
+        elif choice == 2:
+            delete_webhook(webhook_url)
+        elif choice == 3:
+            new_name = prompt_user("Name")
+            change_webhook_name(webhook_url, new_name)
+        elif choice == 4:
+            content = prompt_user("Content")
+            send_one_time_message(webhook_url, content)
+        elif choice == 5:
+            check_webhook_status(webhook_url)
+        elif choice == 6:
+            break
+
+        time.sleep(random.uniform(0.5, 1.5))
+
+if __name__ == "__main__":
+    initialize_webhook()
