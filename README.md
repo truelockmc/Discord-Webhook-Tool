@@ -32,11 +32,6 @@ Usage
    - [5] Check Status: Check the status of the webhook.  
    - [6] Exit: Close the tool.
 
-Support  
-For support and inquiries, please join our community:
-
-- Discord: Join our Discord Server  
-- YouTube: Subscribe to our YouTube Channel
 
 Feel free to reach out if you have any questions or need assistance with the tool!
 
